@@ -1,0 +1,44 @@
+{
+  "name": "relation-graph-3d-force",
+  "version": "1.0.0",
+  "description": "Relation graph for Trails games based on 3d-force-graph",
+  "main": "./dist/",
+  "scripts": {
+    "lint": "eslint --ext .js, src",
+    "build:dev": "webpack --config webpack.config.js  --mode=development",
+    "build:prod": "webpack --config webpack.config.js  --mode=production"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trails-game/relation-graph-3d-force.git"
+  },
+  "files": [
+    "dist",
+    "demo"
+  ],
+  "keywords": [
+    "relation",
+    "trails",
+    "javascript",
+    "人物关系图"
+  ],
+  "author": "trails-game <admin@trails-game.com>",
+  "license": "Apache",
+  "bugs": {
+    "url": "https://github.com/trails-game/relation-graph-3d-force/issues"
+  },
+  "homepage": "https://trails-game.com",
+  "devDependencies": {
+    "@babel/core": "^7.12.10",
+    "@babel/preset-env": "^7.12.11",
+    "babel-loader": "^8.2.2",
+    "webpack": "^5.11.0",
+    "webpack-cli": "^4.2.0",
+    "eslint": "^4.15.0"
+  },
+  "dependencies": {
+    "3d-force-graph": "^1.67.6",
+    "three": "^0.123.0",
+    "three-spritetext": "^1.5.3"
+  }
+}
