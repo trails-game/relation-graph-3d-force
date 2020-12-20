@@ -54,7 +54,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: webpack-artifacts
-        path: _dist
+        path: dist
 
   deploy-us:
     runs-on: ubuntu-latest
