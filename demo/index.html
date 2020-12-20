@@ -13,10 +13,24 @@
   <div id="3d-graph" style="width:1200px;height:1000px;"></div>
 
   <script>
+    let data = {
+      "nodes": [
+        {"id": "Myriel", "group": 1},
+        {"id": "Napoleon", "group": 2},
+        {"id": "Mlle.Baptistine", "group": 3}
+      ],
+      "links": [
+        {"source": "Myriel", "target": "Napoleon", "value": 1},
+        {"source": "Myriel", "target": "Mlle.Baptistine", "value": 8},
+        {"source": "Napoleon", "target": "Myriel", "value": 9}
+      ]
+    };
 
-    var map = document.getElementById('3d-graph');
+    const map = document.getElementById('3d-graph');
     console.log(map);
-    console.log(new RelationChart(map));
-
+    const graph = new RelationChart(map, data);
+    // const graph = new RelationChart(map, 'https://raw.githubusercontent.com/vasturiano/3d-force-graph/master/example/datasets/miserables.json')
+    console.log(graph);
+    graph.init();
   </script>
 </body>
