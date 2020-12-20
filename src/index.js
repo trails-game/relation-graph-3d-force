@@ -1,12 +1,12 @@
 import ForceGraph3D from '3d-force-graph';
+// eslint-disable-next-line no-unused-vars
 import Three from 'three';
 import SpriteText from 'three-spritetext';
 
 export default class RelationChart {
 
   constructor(myMap) {
-    const Graph = ForceGraph3D()
-      (myMap)
+    const Graph = ForceGraph3D()(myMap)
         .jsonUrl('https://raw.githubusercontent.com/vasturiano/3d-force-graph/master/example/datasets/miserables.json')
         .nodeAutoColorBy('group')
         .nodeThreeObject(node => {

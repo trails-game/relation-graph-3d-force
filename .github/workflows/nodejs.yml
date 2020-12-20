@@ -41,8 +41,11 @@ jobs:
           **/node_modules
         key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
-    - run: npm ci
+    - name: install dependencies
+      run: npm ci
+
+    - name: lint
+      run: npm run lint
 
     - name: Webpack build
       run: npm run build:dev
-
