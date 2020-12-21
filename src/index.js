@@ -69,10 +69,10 @@ export default class RelationChart {
 
         const textureLoader = new THREE.TextureLoader();
 
-  			const imgTexture = textureLoader.load( node.avatar, function ( texture ) {
-  				texture.encoding = THREE.sRGBEncoding;
-  				texture.mapping = THREE.EquirectangularReflectionMapping;
-  			} );
+        const imgTexture = textureLoader.load( node.avatar, function ( texture ) {
+          texture.encoding = THREE.sRGBEncoding;
+          texture.mapping = THREE.EquirectangularReflectionMapping;
+        });
 
         var circle = new THREE.Mesh(
           new THREE.CircleGeometry( this.config.nodeSize, 32 ),
@@ -106,20 +106,26 @@ export default class RelationChart {
       .linkThreeObjectExtend(true)
       .linkThreeObject(link => {
         this.links.push(link);
+        console.log(link);
         // extend link with text sprite
         const sprite = new SpriteText(link.relation);
         sprite.color = 'lightgrey';
         sprite.textHeight = 1.5;
         return sprite;
       })
+      .linkCurvature(0.2)
       .linkWidth(link => this.highlightLinks.has(link) ? 1 : 0)
-      .linkPositionUpdate((sprite, { start, end }) => {
+      // eslint-disable-next-line no-unused-vars
+      .linkPositionUpdate((sprite, { start, end }, link) => {
+        /*
         const middlePos = Object.assign(...['x', 'y', 'z'].map(c => ({
           [c]: start[c] + (end[c] - start[c]) / 2 // calc middle point
         })));
-
+        */
         // Position sprite
-        Object.assign(sprite.position, middlePos);
+        // Object.assign(sprite.position, middlePos);
+        // console.log(link.__curve.getPoint(0.5));
+        Object.assign(sprite.position, link.__curve.getPoint(0.5));
       });
 
     // Spread nodes a little wider
