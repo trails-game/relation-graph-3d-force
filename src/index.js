@@ -16,6 +16,7 @@ export default class RelationChart {
 
     // Load data from variable or URL
     if (typeof(data) === 'string') {
+      // TODO: Read JSON from link, below code does not work
       this.Graph = ForceGraph3D()(mapContainer).jsonUrl(data);
     } else {
       this.buildNeighboursAndTestPos(data);
@@ -137,6 +138,7 @@ export default class RelationChart {
               }
             });
           } else if (node && node === this.clickedNode) {
+            // hover on itself
             this.clickedNode.links.forEach(link => this.particleLinks.add(link));
           } else {
             this.particleLinks.clear();
