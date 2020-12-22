@@ -9,7 +9,9 @@ export default class RelationChart {
   constructor(mapContainer, data, config) {
     const defaultConfig = {
       linkWidth: 0.5,
-      nodeSize: 5
+      nodeSize: 5,
+      particleWidth: 1,
+      particleDensity: 5
     };
 
     // Load data from variable or URL
@@ -25,6 +27,7 @@ export default class RelationChart {
 
     this.highlightNodes = new Set();
     this.highlightLinks = new Set();
+    this.particleLinks = new Set();
     this.hoverNode = null;
     this.clickedNode = null;
 
@@ -46,7 +49,8 @@ export default class RelationChart {
       a.links.push(link);
       b.links.push(link);
 
-      link.textPos = (Math.floor(Math.random() * 5) + 4) / 10;
+      // Generate random 1 decimal number between 0.3 and 0.7
+      link.textPos = (Math.floor(Math.random() * 5) + 3) / 10;
     });
   }
 
@@ -68,17 +72,19 @@ export default class RelationChart {
       } else {
         node.__threeObj.material.opacity = 1;
       }
-
     });
 
     this.links.forEach(link => {
       if (this.hoverNode && !this.highlightLinks.has(link)) {
         link.__lineObj.visible = false;
+        link.__arrowObj.visible = false;
       } else {
         link.__lineObj.visible = true;
+        link.__arrowObj.visible = true;
       }
 
     });
+
     this.Graph.linkDirectionalParticles(this.Graph.linkDirectionalParticles());
     /*
     this.Graph
@@ -92,13 +98,14 @@ export default class RelationChart {
     this.Graph.nodeThreeObject((node) => {
         this.nodes.push(node);
 
+        // load img from URL
         const textureLoader = new THREE.TextureLoader();
-
         const imgTexture = textureLoader.load( node.avatar, function ( texture ) {
           texture.encoding = THREE.sRGBEncoding;
           texture.mapping = THREE.EquirectangularReflectionMapping;
         });
 
+        // Mesh a circle with previous img material
         var circle = new THREE.Mesh(
           new THREE.CircleGeometry( this.config.nodeSize, 32 ),
           new THREE.MeshBasicMaterial({
@@ -110,12 +117,36 @@ export default class RelationChart {
         circle.material.transparent = true;
         circle.material.opacity = 0.6;
 
+        // Make object always facing camera
+        // eslint-disable-next-line no-unused-vars
+        circle.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
+          circle.quaternion.copy(camera.quaternion);
+        }
+
         return circle;
       })
       .onNodeHover(node => {
+        // If a node is been clicked, hover on it or its neighbours should emit particles
+        if (this.clickedNode) {
+          if (node && node !== this.clickedNode) {
+            // hover on its neighbours
+            node.links.forEach((link) => {
+              if ((link.source === node && link.target === this.clickedNode) ||
+                  (link.target === node && link.source === this.clickedNode)) {
+                    this.particleLinks.add(link);
+              }
+            });
+          } else if (node && node === this.clickedNode) {
+            this.clickedNode.links.forEach(link => this.particleLinks.add(link));
+          } else {
+            this.particleLinks.clear();
+          }
+          this.Graph.linkDirectionalParticles(this.Graph.linkDirectionalParticles());
+          return;
+        }
+
         // no state change
-        if ((!node && !this.highlightNodes.size) || (node && this.hoverNode === node) ||
-              this.clickedNode) return;
+        if ((!node && !this.highlightNodes.size) || (node && this.hoverNode === node));
 
         this.highlightNodes.clear();
         this.highlightLinks.clear();
@@ -129,50 +160,68 @@ export default class RelationChart {
         this.updateHighlight();
       })
       .onNodeClick(node => {
+        // All click actions are preceeded hover actions
         if (this.clickedNode === node) {
+          // Clicked on the node that has been clicked
           this.clickedNode = null;
           this.hoverNode = null;
           this.highlightNodes.clear();
           this.highlightLinks.clear();
+          this.particleLinks.clear();
           this.updateHighlight();
         } else if (this.clickedNode) {
+          // Clicked on a different node than current clickedNode
           this.clickedNode = node;
           this.hoverNode = node;
           this.highlightNodes.clear();
           this.highlightLinks.clear();
           this.highlightNodes.add(node);
           node.neighbors.forEach(neighbor => this.highlightNodes.add(neighbor));
-          node.links.forEach(link => this.highlightLinks.add(link));
+          node.links.forEach(link => {
+            this.highlightLinks.add(link);
+            this.particleLinks.add(link)
+          });
           this.updateHighlight();
         } else {
+          // No node is in clicked status
           this.clickedNode = node;
+          node.links.forEach(link => this.particleLinks.add(link));
+          this.Graph.linkDirectionalParticles(this.Graph.linkDirectionalParticles());
         }
       })
+      // TODO: add proper URL
+      // eslint-disable-next-line no-unused-vars
       .onNodeRightClick(node => {
+        // On desktop devices, right click to open new tab for character
         let win = window.open("https://trails-game.com/character/juna-crawford/", '_blank');
         win.focus();
       })
       .onBackgroundClick(() => {
+        // Cancel clickedNode status
         this.highlightNodes.clear();
         this.highlightLinks.clear();
         this.clickedNode = null;
         this.hoverNode = null;
         this.updateHighlight();
       })
-      .linkDirectionalParticles(link => this.highlightLinks.has(link) ? 3 : 0)
-      .linkDirectionalParticleWidth(0.5)
+      .linkDirectionalParticles(link => this.particleLinks.has(link) ?
+                                          this.config.particleDensity : 0)
+      .linkDirectionalParticleWidth(this.config.particleWidth)
       .linkThreeObjectExtend(true)
       .linkThreeObject(link => {
         this.links.push(link);
-        //console.log(link);
+        // console.log(link);
         // extend link with text sprite
         const sprite = new SpriteText(link.relation);
         sprite.color = 'lightgrey';
         sprite.textHeight = 1.5;
         return sprite;
       })
+      .linkDirectionalArrowLength(2)
+      .linkDirectionalArrowRelPos(1)
       .linkCurvature(0.2)
-      //.linkWidth(0.2)
+      .linkAutoColorBy('type')
+      // .linkWidth(0.2)
       //.linkWidth(link => this.highlightLinks.has(link) ? 1 : 0)
       //.linkVisibility(link => this.highlightLinks.has(link) ? false : true)
       // eslint-disable-next-line no-unused-vars
