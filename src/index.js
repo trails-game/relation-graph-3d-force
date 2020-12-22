@@ -14,15 +14,8 @@ export default class RelationChart {
       particleDensity: 5
     };
 
-    // Load data from variable or URL
-    if (typeof(data) === 'string') {
-      // TODO: Read JSON from link, below code does not work
-      this.Graph = ForceGraph3D()(mapContainer).jsonUrl(data);
-    } else {
-      this.buildNeighboursAndTestPos(data);
-    }
-
-    this.Graph = ForceGraph3D()(mapContainer).graphData(data);
+    this.mapContainer = mapContainer;
+    this.data = data;
     // set the config, if no config been passed in, set it to default config
     this.config = config || defaultConfig;
 
@@ -34,6 +27,10 @@ export default class RelationChart {
 
     this.nodes = [];
     this.links = [];
+  }
+
+  async loadData() {
+    console.log("Load data from URL");
   }
 
   buildNeighboursAndTestPos(data) {
@@ -53,6 +50,16 @@ export default class RelationChart {
       // Generate random 1 decimal number between 0.3 and 0.7
       link.textPos = (Math.floor(Math.random() * 5) + 3) / 10;
     });
+  }
+
+  async init() {
+    // Load data from variable or URL
+    if (typeof(this.data) === 'string') {
+      await this.loadData();
+    }
+
+    this.buildNeighboursAndTestPos(this.data);
+    this.Graph = ForceGraph3D()(this.mapContainer).graphData(this.data);
   }
 
   updateHighlight() {
@@ -95,7 +102,9 @@ export default class RelationChart {
       */
   }
 
-  init () {
+  async render() {
+    await this.init();
+
     this.Graph.nodeThreeObject((node) => {
         this.nodes.push(node);
 

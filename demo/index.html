@@ -47,6 +47,8 @@
     const graph = new RelationChart(map, data);
     // const graph = new RelationChart(map, 'https://raw.githubusercontent.com/vasturiano/3d-force-graph/master/example/datasets/miserables.json')
     console.log(graph);
-    graph.init();
+    graph.render().then(() => {
+      console.log("Initial Rendering Coimpleted!");
+    });
   </script>
 </body>

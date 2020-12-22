@@ -75,7 +75,9 @@ jobs:
         name: webpack-artifacts
 
     - name: Upload to server
-      run: rsync -av dist/ root@202.91.33.33:/var/www/relations/ --delete-after
+      env:
+        HOST: ${{ secrets.US_HOST }}
+      run: rsync -avz dist/ root@${HOST}:/var/www/relations/ --delete-after
 
   deploy-kr:
     runs-on: ubuntu-latest
@@ -96,4 +98,6 @@ jobs:
         name: webpack-artifacts
 
     - name: Upload to server
-      run: rsync -av dist/ ubuntu@193.122.106.159:/var/www/relations/ --delete-after
+      env:
+        HOST: ${{ secrets.KR_HOST }}
+      run: rsync -avz dist/ ubuntu@${HOST}:/var/www/relations/ --delete-after
