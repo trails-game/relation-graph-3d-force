@@ -15,7 +15,7 @@ export default class RelationChart {
       linkTextSize: 3,
       linkTextColor: 'lightgrey',
       nodeSize: 5,
-      nodeTextSize: 5,
+      nodeTextSize: 4,
       particleWidth: 1,
       particleDensity: 5,
       orgColor: 'gold',
@@ -162,9 +162,14 @@ export default class RelationChart {
         } else {
           const sprite = new SpriteText(node.name);
           sprite.material.depthWrite = false; // make sprite background transparent
-          sprite.color = node.isOrganization ?
-                           this.config.orgColor : this.config.characterColor;
-          sprite.textHeight = this.config.nodeTextSize;
+          if (node.isOrganization) {
+            sprite.color = this.config.orgColor;
+            sprite.textHeight = this.config.nodeTextSize + 2;
+          } else {
+            sprite.color = this.config.characterColor;
+            sprite.textHeight = this.config.nodeTextSize;
+          }
+
           obj = sprite;
         }
 
