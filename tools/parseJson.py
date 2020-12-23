@@ -64,7 +64,7 @@ if (len(missing_names) > 0):
     raise ValueError("missing names: ", missing_names)
 
 output = {"nodes":nodes, "links":links}
-output = json.dumps(output, sort_keys=True, indent=4)
+output = json.dumps(output, sort_keys=True, indent=4, ensure_ascii=False)
 
 print(output)
 
