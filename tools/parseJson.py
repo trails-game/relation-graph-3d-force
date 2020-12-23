@@ -1,7 +1,8 @@
 import pandas as pd
 import json
+import os
 
-file="relation.xls"
+file=os.path.join(os.getcwd(), "tools", "relation.xls")
 
 id = 0
 names = []
@@ -68,6 +69,8 @@ output = json.dumps(output, sort_keys=True, indent=4)
 
 print(output)
 
-with open("..\dist\output.txt", "w") as f:
+target_file = os.path.join("dist", "output.json")
+
+with open(target_file, "w") as f:
     f.write(output)
     f.flush()

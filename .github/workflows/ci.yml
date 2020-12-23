@@ -36,7 +36,7 @@ jobs:
         pip install xlrd pandas
     - name: parse json
       run: |
-        python tools\parseJson.py
+        python tools/parseJson.py
 
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v2
