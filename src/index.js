@@ -18,7 +18,7 @@ export default class RelationChart {
       nodeTextSize: 5,
       particleWidth: 1,
       particleDensity: 5,
-      orgColor: 'red',
+      orgColor: 'gold',
       characterColor: 'skyblue'
     };
 
