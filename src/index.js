@@ -12,9 +12,14 @@ export default class RelationChart {
     this.data = data
     this.config = {
       linkWidth: 0.5,
+      linkTextSize: 1.5,
+      linkTextColor: 'lightgrey',
       nodeSize: 5,
+      nodeTextSize: 5,
       particleWidth: 1,
-      particleDensity: 5
+      particleDensity: 5,
+      orgColor: 'red',
+      characterColor: 'skyblue'
     };
 
     // custom config will overwrite default config
@@ -33,7 +38,7 @@ export default class RelationChart {
   }
 
   async loadData(data) {
-    if (typeof data === "string"){
+    if (typeof data === 'string'){
       try{
         const response = await axios.get(data);
         this.data = response.data;
@@ -126,33 +131,44 @@ export default class RelationChart {
 
     this.Graph.nodeThreeObject((node) => {
         this.nodes.push(node);
+        let obj;
+        if (node.avatar) {
 
-        // load img from URL
-        const textureLoader = new THREE.TextureLoader();
-        const imgTexture = textureLoader.load( node.avatar, function ( texture ) {
-          texture.encoding = THREE.sRGBEncoding;
-          texture.mapping = THREE.EquirectangularReflectionMapping;
-        });
+          // load img from URL
+          const textureLoader = new THREE.TextureLoader();
+          const imgTexture = textureLoader.load( node.avatar, function ( texture ) {
+            texture.encoding = THREE.sRGBEncoding;
+            texture.mapping = THREE.EquirectangularReflectionMapping;
+          });
 
-        // Mesh a circle with previous img material
-        var circle = new THREE.Mesh(
-          new THREE.CircleGeometry( this.config.nodeSize, 32 ),
-          new THREE.MeshBasicMaterial({
-            map: imgTexture,
-            side: THREE.DoubleSide
-          })
-        );
+          // Mesh a circle with previous img material
+          let circle = new THREE.Mesh(
+            new THREE.CircleGeometry( this.config.nodeSize, 32 ),
+            new THREE.MeshBasicMaterial({
+              map: imgTexture,
+              side: THREE.DoubleSide
+            })
+          );
 
-        circle.material.transparent = true;
-        circle.material.opacity = 0.6;
+          circle.material.transparent = true;
+          circle.material.opacity = 0.6;
 
-        // Make object always facing camera
-        // eslint-disable-next-line no-unused-vars
-        circle.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
-          circle.quaternion.copy(camera.quaternion);
+          // Make object always facing camera
+          // eslint-disable-next-line no-unused-vars
+          circle.onBeforeRender = (renderer, scene, camera, geometry, material, group) => {
+            circle.quaternion.copy(camera.quaternion);
+          }
+          obj = circle;
+        } else {
+          const sprite = new SpriteText(node.name);
+          sprite.material.depthWrite = false; // make sprite background transparent
+          sprite.color = node.isOrganization ?
+                           this.config.orgColor : this.config.characterColor;
+          sprite.textHeight = this.config.nodeTextSize;
+          obj = sprite;
         }
 
-        return circle;
+        return obj;
       })
       .onNodeHover(node => {
         // If a node is been clicked, hover on it or its neighbours should emit particles
@@ -243,8 +259,8 @@ export default class RelationChart {
         // console.log(link);
         // extend link with text sprite
         const sprite = new SpriteText(link.relation);
-        sprite.color = 'lightgrey';
-        sprite.textHeight = 1.5;
+        sprite.color = this.config.linkTextColor;
+        sprite.textHeight = this.config.linkTextSize;
         return sprite;
       })
       .linkDirectionalArrowLength(2)

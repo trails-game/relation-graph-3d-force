@@ -11,20 +11,20 @@
 </head>
 
 <body>
-  <div id="3d-graph" style="width:1000;height:800;"></div>
+  <div id="3d-graph""></div>
 
   <script>
     let data = {
       "nodes": [
-        {"id": 0, "group": 1, "avatar" : "https://cdn.trails-game.com/wp-content/uploads/2020/08/icon_565.jpg"},
-        {"id": 1, "group": 2, "avatar" : "https://cdn.trails-game.com/wp-content/uploads/2020/08/icon_568.jpg"},
-        {"id": 2, "group": 3, "avatar" : "https://cdn.trails-game.com/wp-content/uploads/2020/08/icon_567.jpg"},
-        {"id": 3, "group": 1, "avatar" : "https://cdn.trails-game.com/wp-content/uploads/2020/08/icon_567.jpg"},
-        {"id": 4, "group": 2, "avatar" : "https://cdn.trails-game.com/wp-content/uploads/2020/08/icon_567.jpg"},
-        {"id": 5, "group": 3, "avatar" : "https://cdn.trails-game.com/wp-content/uploads/2020/08/icon_567.jpg"},
-        {"id": 6, "group": 1, "avatar" : "https://cdn.trails-game.com/wp-content/uploads/2020/08/icon_567.jpg"},
-        {"id": 7, "group": 2, "avatar" : "https://cdn.trails-game.com/wp-content/uploads/2020/08/icon_567.jpg"},
-        {"id": 8, "group": 3, "avatar" : "https://cdn.trails-game.com/wp-content/uploads/2020/08/icon_567.jpg"}
+        {"id": 0, "group": 1, "avatar" : "https://cdn.trails-game.com/wp-content/uploads/2020/08/icon_565.jpg", "name": "悠娜"},
+        {"id": 1, "group": 2, "avatar" : "https://cdn.trails-game.com/wp-content/uploads/2020/08/icon_568.jpg", "name": "妙婕"},
+        {"id": 2, "group": 3, "avatar" : "https://cdn.trails-game.com/wp-content/uploads/2020/08/icon_567.jpg", "name": "兔子"},
+        {"id": 3, "group": 1, "avatar" : "https://cdn.trails-game.com/wp-content/uploads/2020/08/icon_567.jpg", "name": "兔子"},
+        {"id": 4, "group": 2, "avatar" : "https://cdn.trails-game.com/wp-content/uploads/2020/08/icon_567.jpg", "name": "兔子"},
+        {"id": 5, "group": 3, "avatar" : "", "name": "悠大锤"},
+        {"id": 6, "group": 1, "avatar" : "https://cdn.trails-game.com/wp-content/uploads/2020/08/icon_567.jpg", "name": "兔子"},
+        {"id": 7, "group": 2, "avatar" : "https://cdn.trails-game.com/wp-content/uploads/2020/08/icon_567.jpg", "name": "兔子"},
+        {"id": 8, "group": 3, "avatar" : "https://cdn.trails-game.com/wp-content/uploads/2020/08/icon_567.jpg", "name": "兔子"}
       ],
       "links": [
         {"source": 0, "target": 1, "relation": "朋友", "type" : 0},
