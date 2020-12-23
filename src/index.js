@@ -246,8 +246,13 @@ export default class RelationChart {
       // TODO: add proper URL
       // eslint-disable-next-line no-unused-vars
       .onNodeRightClick(node => {
+        let win;
         // On desktop devices, right click to open new tab for character
-        let win = window.open("https://trails-game.com/character/juna-crawford/", '_blank');
+        if (node.wikiPage) {
+          win = window.open(node.wikiPage, '_blank');
+        } else {
+          win = window.open("https://trails-game.com/character/renne/", '_blank');
+        }
         win.focus();
       })
       .onBackgroundClick(() => {
