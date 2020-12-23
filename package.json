@@ -5,7 +5,7 @@
   "main": "./dist/",
   "scripts": {
     "lint": "eslint --ext .js, src",
-    "build:dev": "webpack --config webpack.config.js  --mode=development",
+    "build:dev": "webpack --config webpack.config.js  --mode=development && python3 tools/parseJson.py > demo/data.json",
     "build:prod": "webpack --config webpack.config.js  --mode=production"
   },
   "repository": {

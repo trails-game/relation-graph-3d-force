@@ -68,7 +68,7 @@ output = json.dumps(output, sort_keys=True, indent=4, ensure_ascii=False)
 
 print(output)
 
-target_file = os.path.join("dist", "output.json")
+target_file = os.path.join("dist", "data.json")
 
 with open(target_file, "w") as f:
     f.write(output)
