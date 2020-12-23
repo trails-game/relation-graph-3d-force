@@ -46,7 +46,6 @@
   "dependencies": {
     "3d-force-graph": "^1.67.6",
     "axios": "^0.21.1",
-    "jquery": "^3.5.1",
     "three": "^0.123.0",
     "three-spritetext": "^1.5.3"
   }

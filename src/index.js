@@ -1,24 +1,26 @@
+'use strict';
+
 import ForceGraph3D from '3d-force-graph';
 import * as THREE from 'three';
 import SpriteText from 'three-spritetext';
-import axios from 'axios'
-// eslint-disable-next-line no-unused-vars
-import $ from "jquery";
+import axios from 'axios';
 
 export default class RelationChart {
 
-  constructor(mapContainer, data, config) {
-    const defaultConfig = {
+  constructor(mapContainer, data, customConfig) {
+    this.mapContainer = mapContainer;
+    this.data = data
+    this.config = {
       linkWidth: 0.5,
       nodeSize: 5,
       particleWidth: 1,
       particleDensity: 5
     };
 
-    this.mapContainer = mapContainer;
-    this.data = data;
-    // set the config, if no config been passed in, set it to default config
-    this.config = config || defaultConfig;
+    // custom config will overwrite default config
+    if (customConfig) {
+      Object.assign(this.config, customConfig);
+    }
 
     this.highlightNodes = new Set();
     this.highlightLinks = new Set();
@@ -30,24 +32,16 @@ export default class RelationChart {
     this.links = [];
   }
 
-  isEmptyDict(dict) {
-    for(var each in dict){
-      return false;
-    }
-    return true;
-  }
-
   async loadData(data) {
     if (typeof data === "string"){
       try{
         const response = await axios.get(data);
-        this.data = response.data
-      }
-      catch (err) {
+        this.data = response.data;
+      } catch (err) {
         console.log(err);
+        this.data = null;
       }
-    }
-    else {
+    } else {
       this.data = data;
     }
   }
@@ -74,13 +68,16 @@ export default class RelationChart {
   async init() {
     // Load data from variable or URL
     await this.loadData(this.data);
-    if (this.isEmptyDict(this.data)){
+    if (!this.data){
       throw "Empty Data"
     }
 
-
     this.buildNeighboursAndTestPos(this.data);
     this.Graph = ForceGraph3D()(this.mapContainer).graphData(this.data);
+
+    // Set the size of the map to equal div
+    this.Graph.width(this.mapContainer.offsetWidth);
+    this.Graph.height(this.mapContainer.offsetHeight);
   }
 
   updateHighlight() {
