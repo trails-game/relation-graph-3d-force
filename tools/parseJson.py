@@ -68,6 +68,6 @@ output = json.dumps(output, sort_keys=True, indent=4)
 
 print(output)
 
-with open("dist\output.txt", "w") as f:
+with open("..\dist\output.txt", "w") as f:
     f.write(output)
     f.flush()
