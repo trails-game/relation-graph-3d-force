@@ -36,6 +36,8 @@ export default class RelationChart {
 
     this.nodes = [];
     this.links = [];
+
+    this.Graph = null;
   }
 
   async loadData(data) {
