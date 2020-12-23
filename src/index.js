@@ -19,6 +19,7 @@ export default class RelationChart {
       particleWidth: 1,
       particleDensity: 5,
       orgColor: 'gold',
+      orgSizeOffset: 2,
       characterColor: 'skyblue'
     };
 
@@ -143,7 +144,9 @@ export default class RelationChart {
 
           // Mesh a circle with previous img material
           let circle = new THREE.Mesh(
-            new THREE.CircleGeometry( this.config.nodeSize, 32 ),
+            new THREE.CircleGeometry(node.isOrganization ?
+                                       this.config.nodeSize + this.config.orgSizeOffset :
+                                       this.config.nodeSize, 32 ),
             new THREE.MeshBasicMaterial({
               map: imgTexture,
               side: THREE.DoubleSide
@@ -164,7 +167,7 @@ export default class RelationChart {
           sprite.material.depthWrite = false; // make sprite background transparent
           if (node.isOrganization) {
             sprite.color = this.config.orgColor;
-            sprite.textHeight = this.config.nodeTextSize + 2;
+            sprite.textHeight = this.config.nodeTextSize + this.config.orgSizeOffset;
           } else {
             sprite.color = this.config.characterColor;
             sprite.textHeight = this.config.nodeTextSize;
