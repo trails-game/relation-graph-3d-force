@@ -12,7 +12,7 @@ export default class RelationChart {
     this.data = data
     this.config = {
       linkWidth: 0.5,
-      linkTextSize: 2.5,
+      linkTextSize: 3,
       linkTextColor: 'lightgrey',
       nodeSize: 5,
       nodeTextSize: 5,

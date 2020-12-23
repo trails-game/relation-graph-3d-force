@@ -37,10 +37,9 @@ for v in values:
             new_node["avatar"] = str(v["avatar"])
         if (str(v["wikiPage"]) != "nan"):
             new_node["wikiPage"] = str(v["wikiPage"])
-        if (v["organization"]):
-            new_node["group"] = 1
         else:
             new_node["group"] = 2
+        new_node["isOrganization"] = v["isOrganization"]
         nodes.append(new_node)
 
 values2 = sheet["人物组织关系"].to_dict(orient="records")
