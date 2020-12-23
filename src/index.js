@@ -1,6 +1,7 @@
 import ForceGraph3D from '3d-force-graph';
 import * as THREE from 'three';
 import SpriteText from 'three-spritetext';
+import axios from 'axios'
 // eslint-disable-next-line no-unused-vars
 import $ from "jquery";
 
@@ -29,8 +30,26 @@ export default class RelationChart {
     this.links = [];
   }
 
-  async loadData() {
-    console.log("Load data from URL");
+  isEmptyDict(dict) {
+    for(var each in dict){
+      return false;
+    }
+    return true;
+  }
+
+  async loadData(data) {
+    if (typeof data === "string"){
+      try{
+        const response = await axios.get(data);
+        this.data = response.data
+      }
+      catch (err) {
+        console.log(err);
+      }
+    }
+    else {
+      this.data = data;
+    }
   }
 
   buildNeighboursAndTestPos(data) {
@@ -54,9 +73,11 @@ export default class RelationChart {
 
   async init() {
     // Load data from variable or URL
-    if (typeof(this.data) === 'string') {
-      await this.loadData();
+    await this.loadData(this.data);
+    if (this.isEmptyDict(this.data)){
+      throw "Empty Data"
     }
+
 
     this.buildNeighboursAndTestPos(this.data);
     this.Graph = ForceGraph3D()(this.mapContainer).graphData(this.data);
