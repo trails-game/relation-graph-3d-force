@@ -2,7 +2,7 @@ import pandas as pd
 import json
 import os
 
-file=os.path.join(os.getcwd(), "tools", "relation.xls")
+file=os.path.join(os.getcwd(), "tools", "relation.xlsx")
 
 id = 0
 names = []
