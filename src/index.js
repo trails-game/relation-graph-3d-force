@@ -75,8 +75,10 @@ export default class RelationChart {
     this.buildNeighboursAndTestPos(this.data);
     this.Graph = ForceGraph3D()(this.mapContainer).graphData(this.data);
 
-    // Set the width of the map to equal div
+    // Set the size of the map to equal div
     this.Graph.width(this.mapContainer.offsetWidth);
+    // 80 is the size of the webpage header
+    this.Graph.height(this.mapContainer.offsetHeight - 80);
   }
 
   updateHighlight() {
