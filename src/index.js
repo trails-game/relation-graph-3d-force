@@ -76,6 +76,8 @@ export default class RelationChart {
     this.Graph = ForceGraph3D()(this.mapContainer).graphData(this.data);
 
     // Set the size of the map to equal div
+    console.log(this.mapContainer.offsetWidth);
+    console.log(this.mapContainer.offsetHeight);
     this.Graph.width(this.mapContainer.offsetWidth);
     this.Graph.height(this.mapContainer.offsetHeight);
   }
