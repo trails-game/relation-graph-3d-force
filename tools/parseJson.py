@@ -1,5 +1,6 @@
 import pandas as pd
 from bs4 import BeautifulSoup
+import threading
 import requests
 import json
 import os
@@ -14,9 +15,12 @@ name_id_map = {}
 name_to_link = {}
 missing_names = []
 
+thread_list = []
+
+base_url = "https://trails-game.com/wp-json/wp/v2/search"
+
 sen_url = "https://trails-game.com/characters_sen/"
 zero_ao_url = "https://trails-game.com/characters_sen/characters_za/"
-
 def build_name_to_link_map(url):
     global name_to_link
     res = requests.get(url)
@@ -31,6 +35,30 @@ def build_name_to_link_map(url):
             title = r.attrs['title']
             name_to_link[title] = link
 
+
+def search_for_link(url, name, isOrganization, new_node):
+    result = None
+    if isOrganization:
+        result = requests.get(url, 
+        params={"type":"post", 
+        "subtype": "map", 
+        "per_page":"1",
+        "search": name})
+    else:
+        result = requests.get(url, 
+        params={"type":"post", 
+        "subtype": "dt_team", 
+        "per_page":"1",
+        "search": name})
+    
+    if result is not None:
+        responseJson = result.json()
+        if len(responseJson) > 0:
+            new_node["wikiPage"] = responseJson[0]["url"]
+        else:
+            new_node["wikiPage"] = ""
+    else:
+        new_node["wikiPage"] = ""
 
 def append_new_node(name):
     global id
@@ -64,7 +92,10 @@ for v in values:
         elif (v["name"] in name_to_link.keys()):
             new_node["wikiPage"] = name_to_link[v["name"]]
         else:
-            new_node["wikiPage"] = ""
+            t = threading.Thread(target=search_for_link, args=(base_url, v["name"], v["isOrganization"], new_node))
+            thread_list.append(t)
+            t.start()
+            
         new_node["isOrganization"] = v["isOrganization"]
         nodes.append(new_node)
 
@@ -85,6 +116,9 @@ for v in values2:
 
         new_link = {"source":source_id, "target":target_id, "relation":v["Relation"], "type":v["RelationType"]}
         links.append(new_link)
+
+for t in thread_list:
+    t.join()
 
 if (len(missing_names) > 0):
     raise ValueError("missing names: ", missing_names)
