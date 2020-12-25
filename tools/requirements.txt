@@ -1,2 +1,4 @@
 xlrd==1.2.0
 pandas
+beautifulsoup4
+requests

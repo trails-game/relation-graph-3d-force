@@ -1,4 +1,6 @@
 import pandas as pd
+from bs4 import BeautifulSoup
+import requests
 import json
 import os
 
@@ -9,8 +11,26 @@ names = []
 nodes = []
 links = []
 name_id_map = {}
-
+name_to_link = {}
 missing_names = []
+
+sen_url = "https://trails-game.com/characters_sen/"
+zero_ao_url = "https://trails-game.com/characters_sen/characters_za/"
+
+def build_name_to_link_map(url):
+    global name_to_link
+    res = requests.get(url)
+    bs = BeautifulSoup(res.text,'html.parser')
+
+    refs = bs.find_all("a")
+
+    for r in refs:
+        keys = r.attrs.keys()
+        if "title" in keys and not "title" in name_to_link.keys():
+            link = r.attrs['href']
+            title = r.attrs['title']
+            name_to_link[title] = link
+
 
 def append_new_node(name):
     global id
@@ -20,6 +40,10 @@ def append_new_node(name):
     name_id_map[name] = str(id)
     id = id+1
     nodes.append(new_node)
+
+
+build_name_to_link_map(sen_url)
+build_name_to_link_map(zero_ao_url)
 
 sheet = pd.read_excel(file, None)
 
@@ -38,7 +62,7 @@ for v in values:
         if (str(v["wikiPage"]) != "nan"):
             new_node["wikiPage"] = str(v["wikiPage"])
         else:
-            new_node["group"] = 2
+            new_node["wikiPage"] = name_to_link[v["name"]]
         new_node["isOrganization"] = v["isOrganization"]
         nodes.append(new_node)
 
