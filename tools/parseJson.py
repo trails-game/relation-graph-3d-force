@@ -61,8 +61,10 @@ for v in values:
             new_node["avatar"] = str(v["avatar"])
         if (str(v["wikiPage"]) != "nan"):
             new_node["wikiPage"] = str(v["wikiPage"])
-        else:
+        elif (v["name"] in name_to_link.keys()):
             new_node["wikiPage"] = name_to_link[v["name"]]
+        else:
+            new_node["wikiPage"] = ""
         new_node["isOrganization"] = v["isOrganization"]
         nodes.append(new_node)
 
