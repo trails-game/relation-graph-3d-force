@@ -20,9 +20,10 @@ malformed_relations = []
 thread_list = []
 
 base_url = "https://trails-game.com/wp-json/wp/v2/search"
-
 sen_url = "https://trails-game.com/characters_sen/"
 zero_ao_url = "https://trails-game.com/characters_sen/characters_za/"
+type_list = ["Char", "Org", "Fam"]
+
 def build_name_to_link_map(url):
     global name_to_link
     res = requests.get(url)
@@ -38,18 +39,18 @@ def build_name_to_link_map(url):
             name_to_link[title] = link
 
 
-def search_for_link(url, name, isOrganization, new_node):
+def search_for_link(url, name, type, new_node):
     result = None
-    if isOrganization:
+    if type == "Char":
         result = requests.get(url, 
         params={"type":"post", 
-        "subtype": "map", 
+        "subtype": "dt_team", 
         "per_page":"1",
         "search": name})
     else:
         result = requests.get(url, 
         params={"type":"post", 
-        "subtype": "dt_team", 
+        "subtype": "map", 
         "per_page":"1",
         "search": name})
     
@@ -78,7 +79,6 @@ build_name_to_link_map(zero_ao_url)
 sheet = pd.read_excel(file, None)
 
 #name sheet processing
-type_list = ["Char", "Org", "Fam"]
 values = sheet["角色"].to_dict(orient="records")
 for v in values:
     if (not v["name"] in names):
@@ -96,7 +96,7 @@ for v in values:
         elif (v["name"] in name_to_link.keys()):
             new_node["wikiPage"] = name_to_link[v["name"]]
         else:
-            t = threading.Thread(target=search_for_link, args=(base_url, v["name"], v["isOrganization"], new_node))
+            t = threading.Thread(target=search_for_link, args=(base_url, v["name"], v["type"], new_node))
             thread_list.append(t)
             t.start()
 
