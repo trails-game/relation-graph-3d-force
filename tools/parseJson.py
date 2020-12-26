@@ -14,6 +14,7 @@ links = []
 name_id_map = {}
 name_to_link = {}
 missing_names = []
+malformed_relations = []
 
 thread_list = []
 
@@ -102,6 +103,7 @@ for v in values:
 values2 = sheet["人物组织关系"].to_dict(orient="records")
 for v in values2:
     if (str(v["source"]) == "nan" or str(v["target"]) == "nan" or str(v["Relation"]) == "nan" or str(v["RelationType"]) == "nan"):
+        malformed_relations.append(v)
         continue
 
     if (not v["source"] in names and not v["source"] in missing_names):
@@ -122,6 +124,9 @@ for t in thread_list:
 
 if (len(missing_names) > 0):
     raise ValueError("missing names: ", missing_names)
+
+if (len(malformed_relations) > 0):
+    raise ValueError("malformed relations: ", malformed_relations)
 
 output = {"nodes":nodes, "links":links}
 output = json.dumps(output, sort_keys=True, indent=4, ensure_ascii=False)
