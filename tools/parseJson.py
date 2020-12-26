@@ -14,6 +14,7 @@ links = []
 name_id_map = {}
 name_to_link = {}
 missing_names = []
+malformed_types = []
 malformed_relations = []
 
 thread_list = []
@@ -77,6 +78,7 @@ build_name_to_link_map(zero_ao_url)
 sheet = pd.read_excel(file, None)
 
 #name sheet processing
+type_list = ["Char", "Org", "Fam"]
 values = sheet["角色"].to_dict(orient="records")
 for v in values:
     if (not v["name"] in names):
@@ -88,6 +90,7 @@ for v in values:
         id = id + 1
         if (str(v["avatar"]) != "nan"):
             new_node["avatar"] = str(v["avatar"])
+        
         if (str(v["wikiPage"]) != "nan"):
             new_node["wikiPage"] = str(v["wikiPage"])
         elif (v["name"] in name_to_link.keys()):
@@ -96,8 +99,12 @@ for v in values:
             t = threading.Thread(target=search_for_link, args=(base_url, v["name"], v["isOrganization"], new_node))
             thread_list.append(t)
             t.start()
-            
-        new_node["isOrganization"] = v["isOrganization"]
+
+        if (v["type"] in type_list):
+            new_node["type"] = v["type"]    
+        else:
+            malformed_types.append(v)
+        
         nodes.append(new_node)
 
 values2 = sheet["人物组织关系"].to_dict(orient="records")
@@ -124,6 +131,9 @@ for t in thread_list:
 
 if (len(missing_names) > 0):
     raise ValueError("missing names: ", missing_names)
+
+if (len(malformed_types) > 0):
+    raise ValueError("malformed types: ", malformed_types)
 
 if (len(malformed_relations) > 0):
     raise ValueError("malformed relations: ", malformed_relations)

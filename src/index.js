@@ -20,7 +20,8 @@ export default class RelationChart {
       particleDensity: 5,
       orgColor: 'gold',
       orgSizeOffset: 2,
-      characterColor: 'skyblue'
+      characterColor: 'skyblue',
+      familyColor: 'green',
     };
 
     // custom config will overwrite default config
@@ -146,9 +147,9 @@ export default class RelationChart {
 
           // Mesh a circle with previous img material
           let circle = new THREE.Mesh(
-            new THREE.CircleGeometry(node.isOrganization ?
-                                       this.config.nodeSize + this.config.orgSizeOffset :
-                                       this.config.nodeSize, 32 ),
+            new THREE.CircleGeometry(node.type === "Char" ?
+                                       this.config.nodeSize :
+                                       this.config.nodeSize + this.config.orgSizeOffset, 32),
             new THREE.MeshBasicMaterial({
               map: imgTexture,
               side: THREE.DoubleSide
@@ -167,12 +168,15 @@ export default class RelationChart {
         } else {
           const sprite = new SpriteText(node.name);
           sprite.material.depthWrite = false; // make sprite background transparent
-          if (node.isOrganization) {
+          if (node.type === "Char") {
+            sprite.color = this.config.characterColor;
+            sprite.textHeight = this.config.nodeTextSize;
+          } else if (node.type === "Org") {
             sprite.color = this.config.orgColor;
             sprite.textHeight = this.config.nodeTextSize + this.config.orgSizeOffset;
           } else {
-            sprite.color = this.config.characterColor;
-            sprite.textHeight = this.config.nodeTextSize;
+            sprite.color = this.config.familyColor;
+            sprite.textHeight = this.config.nodeTextSize + this.config.orgSizeOffset;
           }
 
           obj = sprite;
