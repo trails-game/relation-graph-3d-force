@@ -5,28 +5,12 @@ import requests
 import json
 import os
 
-file=os.path.join(os.getcwd(), "tools", "relation.xlsx")
+BASE_URL = "https://trails-game.com/wp-json/wp/v2/search"
+SEN_URL = "https://trails-game.com/characters_sen/"
+ZERO_AO_URL = "https://trails-game.com/characters_sen/characters_za/"
+TYPES = ["Char", "Org", "Fam"]
 
-id = 0
-names = []
-nodes = []
-links = []
-name_id_map = {}
-name_to_link = {}
-missing_names = []
-malformed_types = []
-malformed_relations = []
-exising_src_dest_pairs = []
-
-thread_list = []
-
-base_url = "https://trails-game.com/wp-json/wp/v2/search"
-sen_url = "https://trails-game.com/characters_sen/"
-zero_ao_url = "https://trails-game.com/characters_sen/characters_za/"
-type_list = ["Char", "Org", "Fam"]
-
-def build_name_to_link_map(url):
-    global name_to_link
+def build_name_to_link_map(url, name_to_link):
     res = requests.get(url)
     bs = BeautifulSoup(res.text,'html.parser')
 
@@ -64,9 +48,9 @@ def search_for_link(url, name, type, new_node):
     else:
         new_node["wikiPage"] = ""
 
-def parse_name_page(sheet):
-    global id
+def parse_name_page(sheet, names, name_id_map, name_to_link, thread_list, malformed_types, nodes):
     #name sheet processing
+    id = 0
     values = sheet["角色"].to_dict(orient="records")
     for v in values:
         if (not v["name"] in names):
@@ -84,18 +68,20 @@ def parse_name_page(sheet):
             elif (v["name"] in name_to_link.keys()):
                 new_node["wikiPage"] = name_to_link[v["name"]]
             else:
-                t = threading.Thread(target=search_for_link, args=(base_url, v["name"], v["type"], new_node))
+                t = threading.Thread(target=search_for_link, args=(BASE_URL, v["name"], v["type"], new_node))
                 thread_list.append(t)
                 t.start()
 
-            if (v["type"] in type_list):
+            if (v["type"] in TYPES):
                 new_node["type"] = v["type"]    
             else:
                 malformed_types.append(v)
             
             nodes.append(new_node)
 
-def parse_relations(sheet):
+def parse_relations(sheet, names, malformed_relations, missing_names, name_id_map, links):
+    exising_src_dest_pairs = []
+
     values2 = sheet["人物组织关系"].to_dict(orient="records")
     for v in values2:
         if (str(v["source"]) == "nan" or str(v["target"]) == "nan" or str(v["Relation"]) == "nan" or str(v["RelationType"]) == "nan"):
@@ -118,7 +104,7 @@ def parse_relations(sheet):
                 new_link = {"source":source_id, "target":target_id, "relation":v["Relation"], "type":v["RelationType"]}
                 links.append(new_link)
 
-def check_values():
+def check_values(missing_names, malformed_types, malformed_relations):
     if (len(missing_names) > 0):
         raise ValueError("missing names: ", missing_names)
     if (len(malformed_types) > 0):
@@ -126,7 +112,7 @@ def check_values():
     if (len(malformed_relations) > 0):
         raise ValueError("malformed relations: ", malformed_relations)
 
-def write_outputs():
+def write_outputs(nodes, links):
     output = {"nodes":nodes, "links":links}
     output = json.dumps(output, sort_keys=True, indent=4, ensure_ascii=False)
     print(output)
@@ -136,18 +122,33 @@ def write_outputs():
         f.flush()
 
 def main():
-    build_name_to_link_map(sen_url)
-    build_name_to_link_map(zero_ao_url)
+    file=os.path.join(os.getcwd(), "tools", "relation.xlsx")
+
+    names = []
+    nodes = []
+    links = []
+    
+    name_id_map = {}
+    name_to_link = {}
+
+    missing_names = []
+    malformed_types = []
+    malformed_relations = []
+
+    thread_list = []
+
+    build_name_to_link_map(SEN_URL, name_to_link)
+    build_name_to_link_map(ZERO_AO_URL, name_to_link)
 
     sheet = pd.read_excel(file, None)
-    parse_name_page(sheet)
-    parse_relations(sheet)
+    parse_name_page(sheet, names, name_id_map, name_to_link, thread_list, malformed_types, nodes)
+    parse_relations(sheet, names, malformed_relations, missing_names, name_id_map, links)
 
     for t in thread_list:
         t.join()
 
-    check_values()
-    write_outputs()
+    check_values(missing_names, malformed_types, malformed_relations)
+    write_outputs(nodes, links)
 
 if __name__ == "__main__":
     main()
