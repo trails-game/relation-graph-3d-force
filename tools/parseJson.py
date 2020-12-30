@@ -1,39 +1,23 @@
 import pandas as pd
-from bs4 import BeautifulSoup
 import threading
 import requests
 import json
 import os
 
-BASE_URL = "https://trails-game.com/wp-json/wp/v2/search"
-SEN_URL = "https://trails-game.com/characters_sen/"
-ZERO_AO_URL = "https://trails-game.com/characters_sen/characters_za/"
+SEARCH_URL = "https://trails-game.com/wp-json/wp/v2/search"
+BASE_URL = "https://trails-game.com/?p="
 TYPES = ["Char", "Org", "Fam"]
 
-def build_name_to_link_map(url, name_to_link):
-    res = requests.get(url)
-    bs = BeautifulSoup(res.text,'html.parser')
-
-    refs = bs.find_all("a")
-
-    for r in refs:
-        keys = r.attrs.keys()
-        if "title" in keys and not "title" in name_to_link.keys():
-            link = r.attrs['href']
-            title = r.attrs['title']
-            name_to_link[title] = link
-
-
-def search_for_link(url, name, type, new_node):
+def search_for_link(name, new_node, type):
     result = None
     if type == "Char":
-        result = requests.get(url, 
+        result = requests.get(SEARCH_URL, 
         params={"type":"post", 
         "subtype": "dt_team", 
         "per_page":"1",
         "search": name})
     else:
-        result = requests.get(url, 
+        result = requests.get(SEARCH_URL, 
         params={"type":"post", 
         "subtype": "map", 
         "per_page":"1",
@@ -48,7 +32,7 @@ def search_for_link(url, name, type, new_node):
     else:
         new_node["wikiPage"] = ""
 
-def parse_name_page(sheet, names, name_id_map, name_to_link, thread_list, malformed_types, nodes):
+def parse_name_page(sheet, names, name_id_map, thread_list, malformed_types, nodes):
     #name sheet processing
     id = 0
     values = sheet["角色"].to_dict(orient="records")
@@ -65,10 +49,10 @@ def parse_name_page(sheet, names, name_id_map, name_to_link, thread_list, malfor
             
             if (str(v["wikiPage"]) != "nan"):
                 new_node["wikiPage"] = str(v["wikiPage"])
-            elif (v["name"] in name_to_link.keys()):
-                new_node["wikiPage"] = name_to_link[v["name"]]
+            elif (str(v["postid"]) != "nan"):
+                new_node["wikiPage"] = BASE_URL + str(int(v["postid"]))
             else:
-                t = threading.Thread(target=search_for_link, args=(BASE_URL, v["name"], v["type"], new_node))
+                t = threading.Thread(target=search_for_link, args=(v["name"], new_node, v["type"]))
                 thread_list.append(t)
                 t.start()
 
@@ -127,9 +111,8 @@ def main():
     names = []
     nodes = []
     links = []
-    
+
     name_id_map = {}
-    name_to_link = {}
 
     missing_names = []
     malformed_types = []
@@ -137,11 +120,8 @@ def main():
 
     thread_list = []
 
-    build_name_to_link_map(SEN_URL, name_to_link)
-    build_name_to_link_map(ZERO_AO_URL, name_to_link)
-
     sheet = pd.read_excel(file, None)
-    parse_name_page(sheet, names, name_id_map, name_to_link, thread_list, malformed_types, nodes)
+    parse_name_page(sheet, names, name_id_map, thread_list, malformed_types, nodes)
     parse_relations(sheet, names, malformed_relations, missing_names, name_id_map, links)
 
     for t in thread_list:
