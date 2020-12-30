@@ -47,9 +47,7 @@ def parse_name_page(sheet, names, name_id_map, thread_list, malformed_types, nod
             if (str(v["avatar"]) != "nan"):
                 new_node["avatar"] = str(v["avatar"])
             
-            if (str(v["wikiPage"]) != "nan"):
-                new_node["wikiPage"] = str(v["wikiPage"])
-            elif (str(v["postid"]) != "nan"):
+            if (str(v["postid"]) != "nan"):
                 new_node["wikiPage"] = BASE_URL + str(int(v["postid"]))
             else:
                 t = threading.Thread(target=search_for_link, args=(v["name"], new_node, v["type"]))
