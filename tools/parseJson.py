@@ -64,16 +64,6 @@ def search_for_link(url, name, type, new_node):
     else:
         new_node["wikiPage"] = ""
 
-def append_new_node(name):
-    global id
-    names.append(name)
-    new_node = {"name" : name, "id": str(id)}
-    new_node["group"] = 2
-    name_id_map[name] = str(id)
-    id = id+1
-    nodes.append(new_node)
-
-
 def parse_name_page(sheet):
     global id
     #name sheet processing
