@@ -16,6 +16,7 @@ name_to_link = {}
 missing_names = []
 malformed_types = []
 malformed_relations = []
+exising_src_dest_pairs = []
 
 thread_list = []
 
@@ -73,78 +74,90 @@ def append_new_node(name):
     nodes.append(new_node)
 
 
-build_name_to_link_map(sen_url)
-build_name_to_link_map(zero_ao_url)
+def parse_name_page(sheet):
+    global id
+    #name sheet processing
+    values = sheet["角色"].to_dict(orient="records")
+    for v in values:
+        if (not v["name"] in names):
+            names.append(v["name"])
 
-sheet = pd.read_excel(file, None)
+            new_node = {"name" : v["name"], "id": str(id)}
+            name_id_map[v["name"]] = str(id)
 
-#name sheet processing
-values = sheet["角色"].to_dict(orient="records")
-for v in values:
-    if (not v["name"] in names):
-        names.append(v["name"])
+            id = id + 1
+            if (str(v["avatar"]) != "nan"):
+                new_node["avatar"] = str(v["avatar"])
+            
+            if (str(v["wikiPage"]) != "nan"):
+                new_node["wikiPage"] = str(v["wikiPage"])
+            elif (v["name"] in name_to_link.keys()):
+                new_node["wikiPage"] = name_to_link[v["name"]]
+            else:
+                t = threading.Thread(target=search_for_link, args=(base_url, v["name"], v["type"], new_node))
+                thread_list.append(t)
+                t.start()
 
-        new_node = {"name" : v["name"], "id": str(id)}
-        name_id_map[v["name"]] = str(id)
+            if (v["type"] in type_list):
+                new_node["type"] = v["type"]    
+            else:
+                malformed_types.append(v)
+            
+            nodes.append(new_node)
 
-        id = id + 1
-        if (str(v["avatar"]) != "nan"):
-            new_node["avatar"] = str(v["avatar"])
-        
-        if (str(v["wikiPage"]) != "nan"):
-            new_node["wikiPage"] = str(v["wikiPage"])
-        elif (v["name"] in name_to_link.keys()):
-            new_node["wikiPage"] = name_to_link[v["name"]]
-        else:
-            t = threading.Thread(target=search_for_link, args=(base_url, v["name"], v["type"], new_node))
-            thread_list.append(t)
-            t.start()
+def parse_relations(sheet):
+    values2 = sheet["人物组织关系"].to_dict(orient="records")
+    for v in values2:
+        if (str(v["source"]) == "nan" or str(v["target"]) == "nan" or str(v["Relation"]) == "nan" or str(v["RelationType"]) == "nan"):
+            malformed_relations.append(v)
+            continue
 
-        if (v["type"] in type_list):
-            new_node["type"] = v["type"]    
-        else:
-            malformed_types.append(v)
-        
-        nodes.append(new_node)
+        if (not v["source"] in names and not v["source"] in missing_names):
+            missing_names.append(v["source"])
+            continue
+        elif (not v["target"] in names and not v["target"] in missing_names):
+            missing_names.append(v["target"])
+            continue
+        elif (not v["source"] in missing_names and not v["target"] in missing_names):
+            source_id = name_id_map[v["source"]]
+            target_id = name_id_map[v["target"]]
 
-values2 = sheet["人物组织关系"].to_dict(orient="records")
-for v in values2:
-    if (str(v["source"]) == "nan" or str(v["target"]) == "nan" or str(v["Relation"]) == "nan" or str(v["RelationType"]) == "nan"):
-        malformed_relations.append(v)
-        continue
+            pair = {source_id : target_id}
+            if not pair in exising_src_dest_pairs:
+                exising_src_dest_pairs.append(pair)
+                new_link = {"source":source_id, "target":target_id, "relation":v["Relation"], "type":v["RelationType"]}
+                links.append(new_link)
 
-    if (not v["source"] in names and not v["source"] in missing_names):
-        missing_names.append(v["source"])
-        continue
-    elif (not v["target"] in names and not v["target"] in missing_names):
-        missing_names.append(v["target"])
-        continue
-    elif (not v["source"] in missing_names and not v["target"] in missing_names):
-        source_id = name_id_map[v["source"]]
-        target_id = name_id_map[v["target"]]
+def check_values():
+    if (len(missing_names) > 0):
+        raise ValueError("missing names: ", missing_names)
+    if (len(malformed_types) > 0):
+        raise ValueError("malformed types: ", malformed_types)
+    if (len(malformed_relations) > 0):
+        raise ValueError("malformed relations: ", malformed_relations)
 
-        new_link = {"source":source_id, "target":target_id, "relation":v["Relation"], "type":v["RelationType"]}
-        links.append(new_link)
+def write_outputs():
+    output = {"nodes":nodes, "links":links}
+    output = json.dumps(output, sort_keys=True, indent=4, ensure_ascii=False)
+    print(output)
+    target_file = os.path.join("dist", "data.json")
+    with open(target_file, "w") as f:
+        f.write(output)
+        f.flush()
 
-for t in thread_list:
-    t.join()
+def main():
+    build_name_to_link_map(sen_url)
+    build_name_to_link_map(zero_ao_url)
 
-if (len(missing_names) > 0):
-    raise ValueError("missing names: ", missing_names)
+    sheet = pd.read_excel(file, None)
+    parse_name_page(sheet)
+    parse_relations(sheet)
 
-if (len(malformed_types) > 0):
-    raise ValueError("malformed types: ", malformed_types)
+    for t in thread_list:
+        t.join()
 
-if (len(malformed_relations) > 0):
-    raise ValueError("malformed relations: ", malformed_relations)
+    check_values()
+    write_outputs()
 
-output = {"nodes":nodes, "links":links}
-output = json.dumps(output, sort_keys=True, indent=4, ensure_ascii=False)
-
-print(output)
-
-target_file = os.path.join("dist", "data.json")
-
-with open(target_file, "w") as f:
-    f.write(output)
-    f.flush()
+if __name__ == "__main__":
+    main()
