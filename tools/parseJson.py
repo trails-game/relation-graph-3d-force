@@ -5,15 +5,12 @@ import json
 import os
 
 SEARCH_URL = "https://trails-game.com/wp-json/wp/v2/search"
-POST_URL = "https://trails-game.com/wp-json/wp/v2/posts"
+BASE_URL = "https://trails-game.com/?p="
 TYPES = ["Char", "Org", "Fam"]
 
-def search_for_link(name, new_node, type = None):
+def search_for_link(name, new_node, type):
     result = None
-    if type == None:
-        result = requests.get(POST_URL,
-        params={"include":int(name)})
-    elif type == "Char":
+    if type == "Char":
         result = requests.get(SEARCH_URL, 
         params={"type":"post", 
         "subtype": "dt_team", 
@@ -28,10 +25,8 @@ def search_for_link(name, new_node, type = None):
     
     if result is not None:
         responseJson = result.json()
-        if len(responseJson) > 0 and type is not None:
+        if len(responseJson) > 0:
             new_node["wikiPage"] = responseJson[0]["url"]
-        elif len(responseJson) > 0:
-            new_node["wikiPage"] = responseJson[0]["link"]
         else:
             new_node["wikiPage"] = ""
     else:
@@ -55,10 +50,7 @@ def parse_name_page(sheet, names, name_id_map, thread_list, malformed_types, nod
             if (str(v["wikiPage"]) != "nan"):
                 new_node["wikiPage"] = str(v["wikiPage"])
             elif (str(v["postid"]) != "nan"):
-                search_for_link(v["postid"], new_node)
-                # t = threading.Thread(target=search_for_link, args=(v["postid"], new_node))
-                # thread_list.append(t)
-                # t.start()
+                new_node["wikiPage"] = BASE_URL + str(int(v["postid"]))
             else:
                 t = threading.Thread(target=search_for_link, args=(v["name"], new_node, v["type"]))
                 thread_list.append(t)
