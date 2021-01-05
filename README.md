@@ -1,3 +1,11 @@
-# relation-graph-3d-force
-Relation graph for Trails games based on 3d-force-graph
+# Overview
+
+Graph of relationship between characters and organizations in trail series game
   
+# Install
+`npm i`
+
+# Build dev/prod
+`npm run build:dev`
+or
+`npm run build:prod`
