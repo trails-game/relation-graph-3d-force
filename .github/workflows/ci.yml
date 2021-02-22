@@ -89,7 +89,7 @@ jobs:
     - name: Upload to server
       env:
         HOST: ${{ secrets.US_HOST }}
-      run: rsync -avz dist/ ubuntu@${HOST}:/var/www/relations/ --delete-after
+      run: rsync -avz dist/ ubuntu@${HOST}:/var/www/data/relations/ --delete-after
 
   deploy-kr:
     runs-on: ubuntu-latest
