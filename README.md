@@ -1,4 +1,5 @@
 # Overview
+[![CI](https://github.com/trails-game/relation-graph-3d-force/actions/workflows/ci.yml/badge.svg)](https://github.com/trails-game/relation-graph-3d-force/actions/workflows/ci.yml)
 
 Graph of relationship between characters and organizations in trail series game
   
