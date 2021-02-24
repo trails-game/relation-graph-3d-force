@@ -6,11 +6,12 @@ import os
 
 SEARCH_URL = "https://trails-game.com/wp-json/wp/v2/search"
 BASE_URL = "https://trails-game.com/?p="
-TYPES = ["Char", "Org", "Fam"]
 
-def search_for_link(name, new_node, type):
+TYPES = ["Char", "Org", "Pos"]
+
+def search_for_link(name, new_node, type_):
     result = None
-    if type == "Char":
+    if type_.split(".")[0] == "Char":
         result = requests.get(SEARCH_URL, 
         params={"type":"post", 
         "subtype": "dt_team", 
@@ -37,8 +38,8 @@ def parse_name_page(sheet, names, name_id_map, thread_list, malformed_types, nod
     id = 0
     values = sheet["角色"].to_dict(orient="records")
     for v in values:
-        if (not v["name"] in names):
-            names.append(v["name"])
+        if not v["name"] in names:
+            names.add(v["name"])
 
             new_node = {"name" : v["name"], "id": str(id)}
             name_id_map[v["name"]] = str(id)
@@ -46,7 +47,6 @@ def parse_name_page(sheet, names, name_id_map, thread_list, malformed_types, nod
             id = id + 1
             if (str(v["avatar"]) != "nan"):
                 new_node["avatar"] = str(v["avatar"])
-            
             if (str(v["postid"]) != "nan"):
                 new_node["wikiPage"] = BASE_URL + str(int(v["postid"]))
             else:
@@ -54,37 +54,40 @@ def parse_name_page(sheet, names, name_id_map, thread_list, malformed_types, nod
                 thread_list.append(t)
                 t.start()
 
-            if (v["type"] in TYPES):
-                new_node["type"] = v["type"]    
-            else:
-                malformed_types.append(v)
-            
+            new_node["type"]=v["type"] if v["type"] in TYPES else malformed_types.append(v)
+
             nodes.append(new_node)
 
 def parse_relations(sheet, names, malformed_relations, missing_names, name_id_map, links):
-    exising_src_dest_pairs = []
+    # not used
+    # set的效率比list高很多。
+    exising_src_dest_pairs = set()
 
-    values2 = sheet["人物组织关系"].to_dict(orient="records")
-    for v in values2:
+    _values = sheet["人物组织关系"].to_dict(orient="records")
+
+    for v in _values:
+        # 验证
         if (str(v["source"]) == "nan" or str(v["target"]) == "nan" or str(v["Relation"]) == "nan" or str(v["RelationType"]) == "nan"):
             malformed_relations.append(v)
             continue
-
         if (not v["source"] in names and not v["source"] in missing_names):
             missing_names.append(v["source"])
             continue
-        elif (not v["target"] in names and not v["target"] in missing_names):
+        if (not v["target"] in names and not v["target"] in missing_names):
             missing_names.append(v["target"])
             continue
-        elif (not v["source"] in missing_names and not v["target"] in missing_names):
-            source_id = name_id_map[v["source"]]
-            target_id = name_id_map[v["target"]]
+        # 验证结束
+        # 这个if没有任何作用，因为前面有问题的都continue了
+        # if (not v["source"] in missing_names and not v["target"] in missing_names):
+        source_id = name_id_map[v["source"]]
+        target_id = name_id_map[v["target"]]
 
-            pair = {source_id : target_id}
-            if not pair in exising_src_dest_pairs:
-                exising_src_dest_pairs.append(pair)
-                new_link = {"source":source_id, "target":target_id, "relation":v["Relation"], "type":v["RelationType"]}
-                links.append(new_link)
+        # 这里要用tuple，用dict的话，in就只会参考source_id而忽略target_id
+        pair = (source_id, target_id)
+        if not pair in exising_src_dest_pairs:
+            exising_src_dest_pairs.add(pair)
+            new_link = {"source":source_id, "target":target_id, "relation":v["Relation"], "type":v["RelationType"]}
+            links.append(new_link)
 
 def check_values(missing_names, malformed_types, malformed_relations):
     if (len(missing_names) > 0):
@@ -94,22 +97,22 @@ def check_values(missing_names, malformed_types, malformed_relations):
     if (len(malformed_relations) > 0):
         raise ValueError("malformed relations: ", malformed_relations)
 
-def write_outputs(nodes, links):
-    output = {"nodes":nodes, "links":links}
-    output = json.dumps(output, sort_keys=True, indent=4, ensure_ascii=False)
-    print(output)
+def write_outputs(output):
     target_file = os.path.join("dist", "data.json")
     with open(target_file, "w") as f:
+        output = json.dumps(output, sort_keys=True, indent=4, ensure_ascii=False)
+        print(output)
         f.write(output)
         f.flush()
 
-def main():
+def run():
     file=os.path.join(os.getcwd(), "tools", "relation.xlsx")
 
-    names = []
-    nodes = []
-    links = []
+    output = {
+        {"nodes":[], "links":[]}
+    }
 
+    names = set()
     name_id_map = {}
 
     missing_names = []
@@ -119,14 +122,16 @@ def main():
     thread_list = []
 
     sheet = pd.read_excel(file, None)
-    parse_name_page(sheet, names, name_id_map, thread_list, malformed_types, nodes)
-    parse_relations(sheet, names, malformed_relations, missing_names, name_id_map, links)
+    parse_name_page(sheet, names, name_id_map, thread_list, malformed_types, output["nodes"])
+    parse_relations(sheet, names, malformed_relations, missing_names, name_id_map, output["links"])
 
+    # no use?
     for t in thread_list:
         t.join()
 
     check_values(missing_names, malformed_types, malformed_relations)
-    write_outputs(nodes, links)
+    write_outputs(output)
+
 
 if __name__ == "__main__":
-    main()
+    run()
