@@ -108,9 +108,7 @@ def write_outputs(output):
 def run():
     file=os.path.join(os.getcwd(), "tools", "relation.xlsx")
 
-    output = {
-        {"nodes":[], "links":[]}
-    }
+    output = {"nodes":[], "links":[]}
 
     names = set()
     name_id_map = {}
