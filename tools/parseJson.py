@@ -7,7 +7,7 @@ import os
 SEARCH_URL = "https://trails-game.com/wp-json/wp/v2/search"
 BASE_URL = "https://trails-game.com/?p="
 
-TYPES = ["Char", "Org", "Pos"]
+TYPES = ["Char", "Org", "Fam"]
 
 def search_for_link(name, new_node, type_):
     result = None
