@@ -62,7 +62,6 @@ def parse_relations(sheet, names, malformed_relations, missing_names, name_id_ma
     # not used
     # set的效率比list高很多。
     exising_src_dest_pairs = set()
-
     _values = sheet["人物组织关系"].to_dict(orient="records")
 
     for v in _values:
@@ -76,11 +75,10 @@ def parse_relations(sheet, names, malformed_relations, missing_names, name_id_ma
         if (not v["target"] in names and not v["target"] in missing_names):
             missing_names.append(v["target"])
             continue
-        # 验证结束
-        # 这个if没有任何作用，因为前面有问题的都continue了
-        # if (not v["source"] in missing_names and not v["target"] in missing_names):
-        source_id = name_id_map[v["source"]]
-        target_id = name_id_map[v["target"]]
+
+        if (not v["source"] in missing_names and not v["target"] in missing_names):
+            source_id = name_id_map[v["source"]]
+            target_id = name_id_map[v["target"]]
 
         # 这里要用tuple，用dict的话，in就只会参考source_id而忽略target_id
         pair = (source_id, target_id)
@@ -91,11 +89,13 @@ def parse_relations(sheet, names, malformed_relations, missing_names, name_id_ma
 
 def check_values(missing_names, malformed_types, malformed_relations):
     if (len(missing_names) > 0):
-        raise ValueError("missing names: ", missing_names)
+        print("missing names: ", missing_names)
     if (len(malformed_types) > 0):
-        raise ValueError("malformed types: ", malformed_types)
+        print("malformed types: ", malformed_types)
     if (len(malformed_relations) > 0):
-        raise ValueError("malformed relations: ", malformed_relations)
+        print("malformed relations: ", malformed_relations)
+    if (len(missing_names) + len (malformed_types) + len(malformed_relations) > 0):
+        raise ValueError("value error")
 
 def write_outputs(output):
     target_file = os.path.join("dist", "data.json")
