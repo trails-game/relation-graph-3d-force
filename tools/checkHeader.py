@@ -22,12 +22,12 @@ def test_header(sheet, failed_links):
 
     for t in thread_list:
         t.join()
-    print(failed_links)
 
 if __name__ == "__main__":
     failed_links = {}
-    file = os.path.join(os.getcwd(), "relation.xlsx")
+    file = os.path.join(os.getcwd(), "tools", "relation.xlsx")
     sheet = pd.read_excel(file, None)
 
     test_header(sheet, failed_links)
-    # run()
+    if (len(failed_links) > 0) :
+        raise ValueError("failed links: {0}".format(failed_links))
