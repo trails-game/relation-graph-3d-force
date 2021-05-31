@@ -1,4 +1,4 @@
-import pandas as pd
+from openpyxl.reader.excel import load_workbook
 import threading
 import requests
 import json
@@ -8,6 +8,41 @@ SEARCH_URL = "https://trails-game.com/wp-json/wp/v2/search"
 BASE_URL = "https://trails-game.com/?p="
 
 TYPES = ["Char", "Org", "Fam"]
+
+def excel_to_dict(sheet):
+    values = []
+    attributes = []
+    for row in sheet.iter_rows(1, 1):
+        # read the dict key
+        for cell in row:
+            if cell.value == None or cell.value == "备注" or cell.value == "审阅人I意见" or cell.value == "审阅人I详细意见" or cell.value == "审阅人II意见" or cell.value == "审阅人II详细意见":
+                break
+            attributes.append(cell.value)
+    
+    attribute_len = len(attributes)
+    for row in sheet.iter_rows(2, sheet.max_row):
+        dict = {}
+        i = 0
+        for cell in row:
+            dict[attributes[i]] = cell.value
+            i += 1
+            if i >= attribute_len:
+                break
+
+        should_delete = True
+        for attr in attributes:
+            if dict[attr] is not None:
+                should_delete = False
+        if should_delete:
+            break
+        
+        values.append(dict)
+    return values
+
+def request_header(v, failed_links):
+    result = requests.head(str(v["avatar"]))
+    if result.status_code != 200:
+        failed_links[v["name"]] = str(v["avatar"])
 
 def search_for_link(name, new_node, type_):
     result = None
@@ -33,10 +68,10 @@ def search_for_link(name, new_node, type_):
     else:
         new_node["wikiPage"] = ""
 
-def parse_name_page(sheet, names, name_id_map, thread_list, malformed_types, nodes):
+def parse_name_page(sheet, names, name_id_map, thread_list, malformed_types, failed_links, nodes):
     #name sheet processing
     id = 0
-    values = sheet["角色"].to_dict(orient="records")
+    values = excel_to_dict(sheet["角色"])
     for v in values:
         if not v["name"] in names:
             names.add(v["name"])
@@ -45,9 +80,13 @@ def parse_name_page(sheet, names, name_id_map, thread_list, malformed_types, nod
             name_id_map[v["name"]] = str(id)
 
             id = id + 1
-            if (str(v["avatar"]) != "nan"):
+            if (v["avatar"] is not None):
                 new_node["avatar"] = str(v["avatar"])
-            if (str(v["postid"]) != "nan"):
+                t = threading.Thread(target=request_header, args=(v, failed_links))
+                thread_list.append(t)
+                t.start()
+
+            if (v["postid"] is not None):
                 new_node["wikiPage"] = BASE_URL + str(int(v["postid"]))
             else:
                 t = threading.Thread(target=search_for_link, args=(v["name"], new_node, v["type"]))
@@ -62,11 +101,11 @@ def parse_relations(sheet, names, malformed_relations, missing_names, name_id_ma
     # not used
     # set的效率比list高很多。
     exising_src_dest_pairs = set()
-    _values = sheet["人物组织关系"].to_dict(orient="records")
+    _values = excel_to_dict(sheet["人物组织关系"])
 
     for v in _values:
         # 验证
-        if (str(v["source"]) == "nan" or str(v["target"]) == "nan" or str(v["Relation"]) == "nan" or str(v["RelationType"]) == "nan"):
+        if (v["source"] == None or v["target"] == None or v["Relation"] == None or v["RelationType"] == None):
             malformed_relations.append(v)
             continue
         if (not v["source"] in names and not v["source"] in missing_names):
@@ -87,14 +126,16 @@ def parse_relations(sheet, names, malformed_relations, missing_names, name_id_ma
             new_link = {"source":source_id, "target":target_id, "relation":v["Relation"], "type":v["RelationType"]}
             links.append(new_link)
 
-def check_values(missing_names, malformed_types, malformed_relations):
+def check_values(missing_names, malformed_types, malformed_relations, failed_links):
     if (len(missing_names) > 0):
-        print("missing names: ", missing_names)
+        print("missing names: {0}".format(missing_names))
     if (len(malformed_types) > 0):
-        print("malformed types: ", malformed_types)
+        print("malformed types: {0}".format(malformed_types) )
     if (len(malformed_relations) > 0):
-        print("malformed relations: ", malformed_relations)
-    if (len(missing_names) + len (malformed_types) + len(malformed_relations) > 0):
+        print("malformed relations: {0}".format(malformed_relations))
+    if (len(failed_links) > 0): 
+        print("failed avatar links: {0}".format(failed_links))
+    if (len(missing_names) + len (malformed_types) + len(malformed_relations) + len(failed_links) > 0):
         raise ValueError("value error")
 
 def write_outputs(output):
@@ -116,18 +157,19 @@ def run():
     missing_names = []
     malformed_types = []
     malformed_relations = []
+    failed_links = []
 
     thread_list = []
 
-    sheet = pd.read_excel(file, None)
-    parse_name_page(sheet, names, name_id_map, thread_list, malformed_types, output["nodes"])
+    sheet = load_workbook(file, read_only=True)
+    parse_name_page(sheet, names, name_id_map, thread_list, malformed_types, failed_links, output["nodes"])
     parse_relations(sheet, names, malformed_relations, missing_names, name_id_map, output["links"])
 
     # no use?
     for t in thread_list:
         t.join()
 
-    check_values(missing_names, malformed_types, malformed_relations)
+    check_values(missing_names, malformed_types, malformed_relations, failed_links)
     write_outputs(output)
 
 
