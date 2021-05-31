@@ -9,30 +9,32 @@ BASE_URL = "https://trails-game.com/?p="
 
 TYPES = ["Char", "Org", "Fam"]
 
-def excel_to_dict(sheet):
+def excel_to_dict(sheet, col_count):
     values = []
     attributes = []
     for row in sheet.iter_rows(1, 1):
+        i = 0
         # read the dict key
         for cell in row:
-            if cell.value == None or cell.value == "备注" or cell.value == "审阅人I意见" or cell.value == "审阅人I详细意见" or cell.value == "审阅人II意见" or cell.value == "审阅人II详细意见":
-                break
             attributes.append(cell.value)
+            i += 1
+            if i >= col_count:
+                break
     
     attribute_len = len(attributes)
     for row in sheet.iter_rows(2, sheet.max_row):
         dict = {}
         i = 0
+        
+        should_delete = True
         for cell in row:
+            if cell.value is not None:
+                should_delete = False
             dict[attributes[i]] = cell.value
             i += 1
             if i >= attribute_len:
                 break
 
-        should_delete = True
-        for attr in attributes:
-            if dict[attr] is not None:
-                should_delete = False
         if should_delete:
             break
         
@@ -71,7 +73,7 @@ def search_for_link(name, new_node, type_):
 def parse_name_page(sheet, names, name_id_map, thread_list, malformed_types, failed_links, nodes):
     #name sheet processing
     id = 0
-    values = excel_to_dict(sheet["角色"])
+    values = excel_to_dict(sheet["角色"], 5)
     for v in values:
         if not v["name"] in names:
             names.add(v["name"])
@@ -101,7 +103,7 @@ def parse_relations(sheet, names, malformed_relations, missing_names, name_id_ma
     # not used
     # set的效率比list高很多。
     exising_src_dest_pairs = set()
-    _values = excel_to_dict(sheet["人物组织关系"])
+    _values = excel_to_dict(sheet["人物组织关系"], 4)
 
     for v in _values:
         # 验证
