@@ -9,37 +9,18 @@ BASE_URL = "https://trails-game.com/?p="
 
 TYPES = ["Char", "Org", "Fam"]
 
-def excel_to_dict(sheet, col_count):
-    values = []
-    attributes = []
-    for row in sheet.iter_rows(1, 1):
-        i = 0
-        # read the dict key
-        for cell in row:
-            attributes.append(cell.value)
-            i += 1
-            if i >= col_count:
-                break
-    
-    attribute_len = len(attributes)
-    for row in sheet.iter_rows(2, sheet.max_row):
-        dict = {}
-        i = 0
-        
-        should_delete = True
-        for cell in row:
-            if cell.value is not None:
-                should_delete = False
-            dict[attributes[i]] = cell.value
-            i += 1
-            if i >= attribute_len:
-                break
-
-        if should_delete:
-            break
-        
-        values.append(dict)
-    return values
+def excel_to_dict(sheet, colNum):
+   values = []
+   # Calc the actual row number
+   rowNum = len([row for row in sheet if not all([cell.value == None for cell in row])])
+   
+   for row in sheet.iter_rows(min_row=2, max_row=rowNum, max_col=colNum):
+      dict = {}
+      for cell in row:
+         dict[sheet[cell.coordinate[0] + '1'].value] = cell.value
+      values.append(dict)
+         
+   return values
 
 def request_header(v, failed_links):
     result = requests.head(str(v["avatar"]))
