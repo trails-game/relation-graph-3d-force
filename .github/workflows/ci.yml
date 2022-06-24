@@ -59,9 +59,7 @@ jobs:
       run: npm run lint
 
     - name: Webpack build
-      run: |
-        npm run build:prod
-        ls dist
+      run: npm run build:prod
 
     - name: Upload webpack artifacts
       uses: actions/upload-artifact@v2
@@ -75,7 +73,12 @@ jobs:
     needs: build
     if: github.ref == 'refs/heads/master'
     steps:
-      - uses: actions/checkout@v2
+      - name: Download webpack artifacts
+        uses: actions/download-artifact@v2
+        with:
+          path: dist
+          name: webpack-artifacts
+
       - uses: yizhoumo/setup-ossutil@v1
         with:
           ossutil-version: '1.7.5' # Optional, default to '1.7.0'
