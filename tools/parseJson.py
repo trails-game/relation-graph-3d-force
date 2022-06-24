@@ -23,7 +23,8 @@ def excel_to_dict(sheet, colNum):
    return values
 
 def request_header(v, failed_links):
-    result = requests.head(str(v["avatar"]))
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36 Edg/102.0.1245.33"}
+    result = requests.head(str(v["avatar"]), headers=headers)
     if result.status_code != 200:
         failed_links[v["name"]] = str(v["avatar"])
 
@@ -42,7 +43,7 @@ def search_for_link(name, new_node, type_):
         "per_page":"1",
         "search": name})
     
-    if result is not None:
+    if result is not None and result.status_code == 200:
         responseJson = result.json()
         if len(responseJson) > 0:
             new_node["wikiPage"] = responseJson[0]["url"]
@@ -140,7 +141,7 @@ def run():
     missing_names = []
     malformed_types = []
     malformed_relations = []
-    failed_links = []
+    failed_links = {}
 
     thread_list = []
 
