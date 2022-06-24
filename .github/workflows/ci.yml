@@ -34,6 +34,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r tools/requirements.txt
+        mkdir dist
     - name: parse json
       run: python tools/parseJson.py
 
@@ -59,7 +60,9 @@ jobs:
       run: npm run lint
 
     - name: Webpack build
-      run: npm run build:prod
+      run: |
+        npm run build:prod
+        ls dist
 
     - name: Upload webpack artifacts
       uses: actions/upload-artifact@v2
