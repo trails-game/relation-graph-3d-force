@@ -7,11 +7,10 @@ extends:
     "eslint:recommended"
 
 rules:
-  no-console: 0
+    no-console: 0
 
 parser:
-  babel-eslint
+    "@babel/eslint-parser"
 
 parserOptions:
-  sourceType: module
-
+    sourceType: module
