@@ -5,7 +5,8 @@ import json
 import os
 
 SEARCH_URL = "https://trails-game.com/wp-json/wp/v2/search"
-BASE_URL = "https://trails-game.com/?p="
+BASE_URL_CHAR = "https://trails-game.com/character?p="
+BASE_URL_ORG = "https://trails-game.com/org?p="
 
 TYPES = ["Char", "Org", "Fam"]
 
@@ -70,8 +71,12 @@ def parse_name_page(sheet, names, name_id_map, thread_list, malformed_types, fai
                 thread_list.append(t)
                 t.start()
 
-            if (v["postid"] is not None):
-                new_node["wikiPage"] = BASE_URL + str(int(v["postid"]))
+            if v["wikiPage"] is not None:
+                new_node["wikiPage"] = v["wikiPage"]
+            elif v["postid"] is not None and v["type"] == TYPES[0]:
+                new_node["wikiPage"] = BASE_URL_CHAR + str(int(v["postid"]))
+            elif v["postid"] is not None:
+                new_node["wikiPage"] = BASE_URL_ORG + str(int(v["postid"]))
             else:
                 t = threading.Thread(target=search_for_link, args=(v["name"], new_node, v["type"]))
                 thread_list.append(t)
