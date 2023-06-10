@@ -26,7 +26,7 @@ def excel_to_dict(sheet, colNum):
 def request_header(v, failed_links):
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36 Edg/102.0.1245.33"}
     result = requests.head(str(v["avatar"]), headers=headers)
-    if result.status_code != 200:
+    if result.status_code >= 400:
         failed_links[v["name"]] = str(v["avatar"])
 
 def search_for_link(name, new_node, type_):
@@ -65,7 +65,7 @@ def parse_name_page(sheet, names, name_id_map, thread_list, malformed_types, fai
             name_id_map[v["name"]] = str(id)
 
             id = id + 1
-            if (v["avatar"] is not None):
+            if (v["avatar"] is not None) and v["avatar"].strip() != "":
                 new_node["avatar"] = str(v["avatar"])
                 t = threading.Thread(target=request_header, args=(v, failed_links))
                 thread_list.append(t)
@@ -131,7 +131,7 @@ def write_outputs(output):
     target_file = os.path.join("dist", "data.json")
     with open(target_file, "w") as f:
         output = json.dumps(output, sort_keys=True, indent=4, ensure_ascii=False)
-        print(output)
+        # print(output)
         f.write(output)
         f.flush()
 
