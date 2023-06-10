@@ -26,7 +26,7 @@ def excel_to_dict(sheet, colNum):
 def request_header(v, failed_links):
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.63 Safari/537.36 Edg/102.0.1245.33"}
     result = requests.head(str(v["avatar"]), headers=headers)
-    if result.status_code >= 400:
+    if result.status_code != 200:
         failed_links[v["name"]] = str(v["avatar"])
 
 def search_for_link(name, new_node, type_):
