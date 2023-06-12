@@ -128,6 +128,7 @@ def check_values(missing_names, malformed_types, malformed_relations, failed_lin
         raise ValueError("value error")
 
 def write_outputs(output):
+    os.makedirs(os.path.dirname("dist"), exist_ok=True)
     target_file = os.path.join("dist", "data.json")
     with open(target_file, "w") as f:
         output = json.dumps(output, sort_keys=True, indent=4, ensure_ascii=False)
